@@ -1,181 +1,355 @@
-🔍 Pattern & Plagiarism Detector
-String Pattern Matching & Plagiarism Detection Tool
-Show Image
-Show Image
-Show Image
-Show Image
-Show Image
-A text analysis tool implementing Rabin-Karp, KMP, and Boyer-Moore algorithms entirely in C++ to search patterns across documents — compares algorithms on execution time and match count, and highlights potentially plagiarized or repeated content.
-Pattern Matching • Algorithm Benchmarking • Real-time Highlighting • Similarity Scoring • Web UI
+<div align="center">
 
-📋 Overview
-Pattern & Plagiarism Detector is a systems-level project that implements three classic string searching algorithms from scratch in C++17. The compiled binary outputs structured JSON, which a lightweight Node.js + Express bridge serves to a browser-based frontend. Users can paste any text, enter a search pattern, and instantly see where it appears — along with a side-by-side comparison of how each algorithm performed.
-🎯 Purpose
-Plagiarism and repeated content are major concerns in academia and publishing. This tool gives users a fast, algorithm-driven way to detect patterns and repetitions in documents — while also serving as a practical demonstration of how different string matching algorithms compare in real-world usage.
+# 🛡️ PhishGuard AI
+### AI-Powered Phishing Detection System
 
-✨ Features
+![React](https://img.shields.io/badge/Frontend-React_18-61DAFB?style=for-the-badge&logo=react)
+![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=nodedotjs)
+![Express](https://img.shields.io/badge/Server-Express.js-000000?style=for-the-badge&logo=express)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb)
+![JWT](https://img.shields.io/badge/Auth-JWT-F7B93E?style=for-the-badge&logo=jsonwebtokens)
 
-🤖 Three Algorithms — Rabin-Karp, KMP, and Boyer-Moore all implemented from scratch in C++17
-⚡ Algorithm Benchmarking — Side-by-side execution time comparison in microseconds with visual bars
-🏆 Fastest Algorithm Badge — Automatically highlights which algorithm won for the given input
-🖊️ Match Highlighting — All occurrences highlighted and pulsing in the output text
-📊 Similarity Score — 0–100% coverage score with a colour-coded meter
-📁 File Mode — Analyze full documents via --file flag on the CLI
-🌐 Web UI — Dark terminal-style interface served via Express, no framework required
-🔧 VS Code Ready — Pre-configured tasks.json and launch.json for build and debug
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Active-success?style=flat-square)
 
+> An AI-powered full-stack web application that detects phishing threats in **URLs, Emails, and Text** using a custom-built Machine Learning engine with NLP pattern analysis.
 
-🏗️ System Architecture
-📦 Pattern & Plagiarism Detector
+**NLP Detection • Heuristic Scoring • Real-time Analytics • Scan History • JWT Auth**
+
+[Features](#-features) • [Quick Start](#-quick-start) • [How AI Works](#-how-the-ai-works) • [API Docs](#-api-endpoints) • [Tech Stack](#-tech-stack)
+
+</div>
+
+---
+
+## 📋 Overview
+
+**PhishGuard AI** is a comprehensive phishing detection system designed to protect users from online threats. The system uses a custom-built AI engine that combines **NLP keyword analysis**, **URL heuristics**, and **weighted feature scoring** to classify threats — with no external ML API required.
+
+### 🎯 Mission
+Phishing attacks are one of the most common cyber threats today. PhishGuard AI gives users a simple, fast, and intelligent tool to verify suspicious URLs, emails, and messages before interacting with them.
+
+---
+
+## ✨ Features
+
+- 🤖 **AI Detection Engine** — Custom NLP + Heuristic ML model, fully self-contained
+- 🔗 **URL Scanner** — Detects typosquatting, suspicious TLDs, IP-based URLs, shortened links
+- 📧 **Email Scanner** — Detects phishing phrases, brand impersonation, urgency language
+- 📝 **Text Scanner** — Analyzes any suspicious message or content
+- 📊 **Dashboard** — Real-time stats, charts, threat breakdown, and scan activity
+- 📋 **Scan History** — Full paginated history with filters and delete options
+- 🔐 **JWT Authentication** — Secure login and registration system
+- 🔒 **Password Hashing** — bcrypt encryption for all stored passwords
+- ⚡ **Rate Limiting** — Protection against API abuse (100 req / 15 min)
+- 📈 **Risk Scoring** — 0–100 risk score with confidence percentage per scan
+
+---
+
+## 🏗️ System Architecture
+
+```
+📦 PhishGuard AI System
 │
-├── 🖥️  Frontend (Vanilla HTML/CSS/JS)
-│   └── index.html   — Input, results, algorithm table, highlighted output
+├── 🖥️  Frontend (React 18)
+│   ├── 🔐 Auth        - Login & Register pages
+│   ├── 📊 Dashboard   - Stats, charts, quick actions
+│   ├── 🔍 Scanner     - URL / Email / Text detection UI
+│   └── 📋 History     - Paginated scan history with filters
 │
-├── ⚡ Bridge (Node.js + Express)
-│   └── server.js    — Spawns C++ binary, passes text via temp file, returns JSON
+├── ⚡ Backend (Express.js)
+│   ├── 🔐 Auth Routes     - Register, Login, Get Me
+│   ├── 🔍 Scan Routes     - Run detection, Get result
+│   ├── 📋 History Routes  - CRUD for scan history
+│   └── 📊 Stats Routes    - Dashboard analytics
 │
-└── 🤖 Detection Engine (C++17)
-    ├── rabin_karp.cpp    — Rolling hash, avg O(n+m)
-    ├── kmp.cpp           — Failure function, guaranteed O(n+m)
-    ├── boyer_moore.cpp   — Bad-char + good-suffix, O(n/m) best case
-    ├── json_output.cpp   — Serializes results to stdout as JSON
-    └── detector.cpp      — Entry point, times all 3, calls outputJSON
+├── 🤖 AI / ML Engine (Custom)
+│   ├── 🔗 URL Feature Extractor
+│   ├── 📧 Email Feature Extractor
+│   ├── 📝 Text Feature Extractor
+│   ├── ⚖️  Weighted Scoring Engine
+│   └── 🏷️  Verdict Classifier
+│
+└── 🗄️  Database (MongoDB)
+    ├── 👤 Users Collection
+    └── 📁 Scans Collection
+```
 
-🧠 Algorithm Comparison
-AlgorithmTime (Average)Time (Worst)SpaceBest Used ForRabin-KarpO(n + m)O(nm)O(1)Multiple patterns, large documentsKMPO(n + m)O(n + m)O(m)Guaranteed linear, single patternBoyer-MooreO(n / m)O(nm)O(σ + m)Long patterns on natural language text
+---
 
-σ = alphabet size (256 for ASCII text)
+## 🚦 Threat Classification
 
-How Scoring Works
-Input Text + Pattern
+| Verdict | Risk Score | Description | Color |
+|---------|-----------|-------------|-------|
+| ✅ Safe | 0 – 29 | No threats detected, content appears legitimate | Green |
+| ⚠️ Suspicious | 30 – 59 | Some red flags found, proceed with caution | Amber |
+| 🚨 Phishing | 60 – 100 | High threat detected, do NOT interact | Red |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+| Requirement | Version | Download |
+|------------|---------|----------|
+| Node.js | 18+ | [nodejs.org](https://nodejs.org/) |
+| MongoDB | Latest | [mongodb.com](https://www.mongodb.com/) |
+| Git | Latest | [git-scm.com](https://git-scm.com/) |
+
+### ⚡ Setup — Backend
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/JatindeepSingh/AI-Phishing-Detector.git
+cd AI-Phishing-Detector
+
+# 2. Go to backend
+cd backend
+npm install
+
+# 3. Create .env file
+cp .env.example .env
+# Edit .env with your values
+
+# 4. Start backend server
+npm run dev
+```
+✅ Backend runs at `http://localhost:5000`
+
+### ⚡ Setup — Frontend
+
+Open a **new terminal**:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+✅ Frontend runs at `http://localhost:3000`
+
+### 🔧 Environment Variables
+
+Create a `.env` file inside `backend/`:
+
+```env
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/phishing_detector
+JWT_SECRET=your_super_secret_key_here
+NODE_ENV=development
+```
+
+---
+
+## 🤖 How the AI Works
+
+The detection engine extracts features from input and uses a **weighted scoring system** to calculate a risk score from 0–100.
+
+### URL Features Analyzed
+
+| Feature | Risk Points |
+|---------|------------|
+| No HTTPS encryption | +15 |
+| Raw IP address in URL | +30 |
+| @ symbol in URL | +25 |
+| Mimics real brand (typosquatting) | +35 |
+| Suspicious TLD (.ru, .tk, .xyz) | +25 |
+| Shortened URL (bit.ly etc.) | +20 |
+| Excessive subdomains | +15 each |
+| Phishing keywords in URL | +10 |
+| Malformed / invalid URL | +40 |
+
+### Email Features Analyzed
+
+| Feature | Risk Points |
+|---------|------------|
+| Phishing keywords detected | +8 each |
+| Generic greeting (Dear Customer) | +15 |
+| Brand impersonation | +20 |
+| Urgency language | +10 each |
+| Suspicious links inside email | +20 each |
+| Excessive exclamation marks | +10 |
+| Excessive capital letters | +10 |
+
+### Scoring Flow
+
+```
+Input (URL / Email / Text)
         ↓
-Run all 3 algorithms (timed individually)
+Feature Extraction
         ↓
-Collect match positions + execution time (µs)
+Weighted Scoring  →  Risk Score (0–100)
         ↓
-Similarity = (matches × pattern_length) / text_length × 100
+Verdict Classification
         ↓
-  0–19%  →  ✅ LOW  (green)
- 20–49%  →  ⚠️  MEDIUM (amber)
- 50–100% →  🚨 HIGH  (red)
+  0–29  →  ✅ SAFE
+ 30–59  →  ⚠️  SUSPICIOUS
+ 60–100 →  🚨 PHISHING
         ↓
-JSON → Node.js → Browser → Highlighted Output
+Confidence % + Flags List
+```
 
-🚀 Quick Start
-Prerequisites
-RequirementVersionDownloadg++ / MinGW13+msys2.org (Windows)make / mingw32-make4+Included with MSYS2Node.js18+nodejs.org
-⚡ Windows Setup (MSYS2)
-bash# In MSYS2 MinGW x64 terminal
-pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make
-Then add C:\msys64\mingw64\bin to your Windows PATH environment variable.
-⚡ Linux / Mac Setup
-bash# Ubuntu / Debian
-sudo apt install g++ make
+---
 
-# Mac
-xcode-select --install
+## 🛠️ Tech Stack
 
-1. Clone the Repository
-bashgit clone https://github.com/YourUsername/pattern-plagiarism-detector.git
-cd pattern-plagiarism-detector
-2. Install Node Dependencies
-bashnpm install
-3. Compile the C++ Binary
-bash# Linux / Mac
-make
+### Backend
+| Technology | Purpose |
+|-----------|---------|
+| Node.js | JavaScript runtime |
+| Express.js | REST API framework |
+| MongoDB | NoSQL database |
+| Mongoose | MongoDB ODM / schemas |
+| JWT | Secure authentication tokens |
+| bcryptjs | Password hashing |
+| dotenv | Environment variable management |
+| express-rate-limit | API rate limiting |
+| nodemon | Auto server restart (dev) |
 
-# Windows
-mingw32-make
-✅ Produces detector (Linux/Mac) or detector.exe (Windows)
-4. Start the Web Server
-bashnode server.js
-✅ Server runs at http://localhost:3000
-5. Open in Browser
-http://localhost:3000
+### Frontend
+| Technology | Purpose |
+|-----------|---------|
+| React 18 | UI component framework |
+| React Router v6 | Client-side routing |
+| CSS Modules | Scoped component styling |
+| Axios | HTTP requests to backend |
+| Recharts | Dashboard charts & graphs |
+| Context API | Global auth state management |
 
-🖥️ CLI Usage
-You can also run the C++ binary directly from the terminal:
-bash# Search pattern in inline text
-./detector "the cat sat on the mat and the cat came back" "cat"
+---
 
-# Search pattern in a file
-./detector samples/sample1.txt "quick brown fox" --file
-Sample JSON Output
-json{
-  "text": "the cat sat on the mat...",
-  "pattern": "cat",
-  "similarity": 12.5,
-  "matchPositions": [4, 18],
-  "matchCount": 2,
-  "algorithms": [
-    { "name": "Rabin-Karp",  "matchCount": 2, "timeUs": 3, "matches": [4, 18] },
-    { "name": "KMP",         "matchCount": 2, "timeUs": 2, "matches": [4, 18] },
-    { "name": "Boyer-Moore", "matchCount": 2, "timeUs": 1, "matches": [4, 18] }
-  ]
-}
+## 📁 Project Structure
 
-📁 Project Structure
-pattern-plagiarism-detector/
+```
+AI-Phishing-Detector/
 │
-├── src/
-│   ├── detector.cpp        ← Main entry point
-│   ├── rabin_karp.cpp      ← Rabin-Karp implementation
-│   ├── kmp.cpp             ← KMP implementation
-│   ├── boyer_moore.cpp     ← Boyer-Moore implementation
-│   └── json_output.cpp     ← JSON serializer
+├── backend/
+│   ├── middleware/
+│   │   └── auth.js              # JWT verification middleware
+│   ├── ml/
+│   │   └── detector.js          # 🤖 AI detection engine
+│   ├── models/
+│   │   ├── User.js              # User MongoDB schema
+│   │   └── Scan.js              # Scan result MongoDB schema
+│   ├── routes/
+│   │   ├── auth.js              # Register / Login / Me
+│   │   ├── scan.js              # Run AI scan
+│   │   ├── history.js           # Scan history CRUD
+│   │   └── stats.js             # Dashboard statistics
+│   ├── .env                     # Environment variables (not in repo)
+│   ├── package.json
+│   └── server.js                # Express entry point
 │
-├── include/
-│   ├── algorithms.h        ← Declarations + AlgorithmResult struct
-│   └── json_output.h       ← outputJSON declaration
-│
-├── frontend/
-│   └── index.html          ← Web UI (single file, no build step needed)
-│
-├── samples/
-│   └── sample1.txt         ← Sample document for testing
-│
-├── .vscode/
-│   ├── tasks.json          ← Build / Run / Clean tasks
-│   └── launch.json         ← C++ debugger config (F5)
-│
-├── Makefile                ← Compiles all C++ sources
-├── server.js               ← Express bridge server
-├── package.json
-└── README.md
+└── frontend/
+    ├── public/
+    │   └── index.html           # HTML shell
+    └── src/
+        ├── components/
+        │   ├── Layout.js        # Sidebar + navigation shell
+        │   └── Layout.module.css
+        ├── context/
+        │   └── AuthContext.js   # Global auth state (React Context)
+        ├── pages/
+        │   ├── Login.js         # Login page
+        │   ├── Register.js      # Register page
+        │   ├── Dashboard.js     # Stats + charts
+        │   ├── Scanner.js       # Main AI scan interface
+        │   ├── History.js       # Paginated scan history
+        │   └── *.module.css     # Page-level styles
+        ├── App.js               # Routes + private/public guards
+        ├── index.js             # React entry point
+        └── index.css            # Global styles + CSS variables
+```
 
-🧪 Test Inputs
-High Repetition (high similarity score expected)
-the quick brown fox jumps over the lazy dog the quick brown fox
-Pattern: the quick brown fox
-No Match
-hello world this is a test document
-Pattern: xyz
-File Mode
-bash./detector samples/sample1.txt "quick brown fox" --file
+---
 
-🛠️ VS Code Integration
-Build (Ctrl+Shift+B)
-Runs make / mingw32-make automatically via tasks.json.
-Debug (F5)
-Launches the C++ binary with sample input via launch.json. Set breakpoints anywhere in the source files.
-All Tasks (Ctrl+Shift+P → "Run Task")
-TaskWhat it doesBuild C++ (make)Compiles all source filesStart Web ServerRuns node server.jsBuild & RunCompiles then starts serverRun CLI TestRuns make test with sample inputsCleanDeletes the compiled binary
+## 🔑 API Endpoints
 
-🤝 Contributing
+### Auth
+| Method | Endpoint | Description | Protected |
+|--------|----------|-------------|-----------|
+| POST | `/api/auth/register` | Create new account | ❌ |
+| POST | `/api/auth/login` | Login and get token | ❌ |
+| GET | `/api/auth/me` | Get current user info | ✅ |
 
-Fork the repository
-Create your feature branch: git checkout -b feature/YourFeature
-Commit your changes: git commit -m 'Add YourFeature'
-Push to the branch: git push origin feature/YourFeature
-Open a Pull Request
+### Scan
+| Method | Endpoint | Description | Protected |
+|--------|----------|-------------|-----------|
+| POST | `/api/scan` | Run AI phishing detection | ✅ |
+| GET | `/api/scan/:id` | Get single scan result | ✅ |
 
+### History
+| Method | Endpoint | Description | Protected |
+|--------|----------|-------------|-----------|
+| GET | `/api/history` | Get paginated scan history | ✅ |
+| DELETE | `/api/history/:id` | Delete one scan | ✅ |
+| DELETE | `/api/history` | Clear all history | ✅ |
 
-⚠️ Disclaimer
-This tool is intended for educational and academic use. The similarity score is based on exact pattern coverage and is not a substitute for a full plagiarism detection system. Always verify results manually.
+### Stats
+| Method | Endpoint | Description | Protected |
+|--------|----------|-------------|-----------|
+| GET | `/api/stats` | Get dashboard statistics | ✅ |
 
-📝 License
-This project is open source and available under the MIT License.
+---
 
-👨‍💻 Developer
-Jatindeep Singh
-🌟 Star this repo if it helped you!
+## 🧪 Test Inputs
+
+### 🚨 Phishing URL
+```
+http://paypal-secure-login.ru/verify?account=suspended
+```
+
+### 🚨 Phishing Email
+```
+Dear Customer, Your account has been suspended due to unusual 
+activity. Click here immediately to verify your account or it 
+will be permanently closed. Act now — limited time!
+```
+
+### ⚠️ Suspicious Text
+```
+Congratulations! You have won $1,000,000 lottery prize.
+Wire transfer required. Act now, limited time offer!
+```
+
+### ✅ Safe URL
+```
+https://github.com/login
+```
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/AmazingFeature`
+3. Commit your changes: `git commit -m 'Add AmazingFeature'`
+4. Push to the branch: `git push origin feature/AmazingFeature`
+5. Open a Pull Request
+
+---
+
+## ⚠️ Disclaimer
+
+PhishGuard AI is a **decision support tool**. It is designed to assist users in identifying potential phishing threats but should not be the sole basis for security decisions. Always exercise caution and use additional security measures.
+
+---
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+## 👨‍💻 Developer
+
+**Jatindeep Singh**
+
+<div align="center">
+
+🌟 **Star this repo if it helped you!**
+
+Made with ❤️ for a Safer Internet
+
+</div>
