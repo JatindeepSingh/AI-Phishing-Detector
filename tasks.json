@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build C++ (make)",
+      "type": "shell",
+      "command": "make",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Start Web Server",
+      "type": "shell",
+      "command": "node server.js",
+      "group": "test",
+      "presentation": { "reveal": "always", "panel": "shared" },
+      "isBackground": true
+    },
+    {
+      "label": "Build & Run",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Build C++ (make)", "Start Web Server"],
+      "group": "build"
+    },
+    {
+      "label": "Run CLI Test",
+      "type": "shell",
+      "command": "make test",
+      "group": "test",
+      "presentation": { "reveal": "always" }
+    },
+    {
+      "label": "Clean",
+      "type": "shell",
+      "command": "make clean",
+      "group": "build"
+    }
+  ]
+}

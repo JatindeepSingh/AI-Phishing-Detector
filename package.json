@@ -1,0 +1,14 @@
+{
+  "name": "pattern-plagiarism-detector",
+  "version": "1.0.0",
+  "description": "Pattern & Plagiarism Detector — C++ backend with web frontend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "make",
+    "dev": "make && node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

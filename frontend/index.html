@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pattern & Plagiarism Detector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  /* ── Reset & Base ─────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #13161f;
+    --surface2:  #1a1e2e;
+    --border:    #252a3a;
+    --accent:    #4ade80;
+    --accent2:   #38bdf8;
+    --accent3:   #f59e0b;
+    --danger:    #f87171;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --highlight: rgba(74, 222, 128, 0.28);
+    --rk-color:  #a78bfa;
+    --kmp-color: #38bdf8;
+    --bm-color:  #fb923c;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-ui:   'Space Mono', monospace;
+    --radius:    8px;
+  }
+
+  html { font-size: 15px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Scanline overlay ─────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── Layout ───────────────────────────────────────── */
+  .shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ── Header ───────────────────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    width: 48px; height: 48px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    box-shadow: 0 0 24px rgba(74,222,128,0.35);
+  }
+
+  .header-text h1 {
+    font-family: var(--font-ui);
+    font-size: 1.25rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .header-text p {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    letter-spacing: 0.03em;
+  }
+
+  .badge {
+    margin-left: auto;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Input Panel ──────────────────────────────────── */
+  .input-panel {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  @media (max-width: 720px) {
+    .input-panel { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 0.6rem 1rem;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-r { background: #f87171; }
+  .dot-y { background: #fbbf24; }
+  .dot-g { background: var(--accent); }
+
+  textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    resize: none;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    padding: 1rem;
+    outline: none;
+    line-height: 1.7;
+    height: 220px;
+  }
+
+  textarea::placeholder { color: var(--muted); }
+
+  /* ── Right Controls ───────────────────────────────── */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    margin-bottom: 0.4rem;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    padding: 0.7rem 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  .algo-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.78rem;
+  }
+
+  .toggle-row:hover { background: var(--surface2); }
+
+  .algo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .btn-run {
+    margin-top: auto;
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 0 20px rgba(74,222,128,0.3);
+  }
+
+  .btn-run:hover { opacity: 0.9; box-shadow: 0 0 30px rgba(74,222,128,0.45); }
+  .btn-run:active { transform: scale(0.98); }
+  .btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Loader ───────────────────────────────────────── */
+  .loader {
+    display: none;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Results Section ──────────────────────────────── */
+  #results { display: none; }
+
+  /* ── Stats Bar ────────────────────────────────────── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  @media (max-width: 600px) { .stats-bar { grid-template-columns: 1fr; } }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: var(--font-ui);
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 0.2rem;
+  }
+
+  /* ── Similarity Meter ─────────────────────────────── */
+  .similarity-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .sim-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.7rem;
+  }
+
+  .sim-pct { font-size: 1.1rem; font-weight: 700; }
+
+  .bar-track {
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+    width: 0%;
+  }
+
+  /* ── Algorithm Comparison Table ───────────────────── */
+  .algo-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr {
+    background: var(--surface2);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+  }
+
+  th, td {
+    padding: 0.8rem 1.1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .algo-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .time-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  .time-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .time-bar-inner {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+
+  .winner-badge {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    background: rgba(74,222,128,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(74,222,128,0.3);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Highlighted Text Output ──────────────────────── */
+  .text-output-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  #highlighted-text {
+    padding: 1.2rem;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-height: 340px;
+    overflow-y: auto;
+  }
+
+  mark {
+    background: var(--highlight);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 0.05em 0.1em;
+    font-weight: 700;
+    border-bottom: 2px solid var(--accent);
+    animation: pulse-hl 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-hl {
+    0%, 100% { background: rgba(74,222,128,0.22); }
+    50%       { background: rgba(74,222,128,0.38); }
+  }
+
+  /* ── Error ────────────────────────────────────────── */
+  .error-box {
+    display: none;
+    padding: 1rem 1.2rem;
+    background: rgba(248,113,113,0.1);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: var(--radius);
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  /* ── Scrollbar ────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">🔍</div>
+    <div class="header-text">
+      <h1>PATTERN & PLAGIARISM DETECTOR</h1>
+      <p>Rabin-Karp &nbsp;·&nbsp; KMP &nbsp;·&nbsp; Boyer-Moore &nbsp;·&nbsp; C++ powered</p>
+    </div>
+    <div class="badge">v1.0 · C++17</div>
+  </header>
+
+  <!-- Input Panel -->
+  <div class="input-panel">
+
+    <!-- Text area -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        &nbsp; INPUT TEXT
+      </div>
+      <textarea id="inputText" placeholder="Paste your document or text here…
+
+Example: The quick brown fox jumps over the lazy dog. The quick brown fox is fast."></textarea>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="field">
+        <label>SEARCH PATTERN</label>
+        <input id="patternInput" type="text" placeholder="e.g. quick brown fox" />
+      </div>
+
+      <div class="field">
+        <label>ALGORITHMS</label>
+        <div class="algo-toggles">
+          <label class="toggle-row">
+            <div class="algo-dot" style="background:var(--rk-color)"></div>
+            <span>Rabin-Karp</span>
+            <input type="checkbox" checked style="margin-left:auto" id="ck-rk" />
+          </label>
+          <label class="toggle-row">
+            <div class="algo-dot" style="background:var(--kmp-color)"></div>
+            <span>KMP</span>
+            <input type="checkbox" checked style="margin-left:auto" id="ck-kmp" />
+          </label>
+          <label class="toggle-row">
+            <div class="algo-dot" style="background:var(--bm-color)"></div>
+            <span>Boyer-Moore</span>
+            <input type="checkbox" checked style="margin-left:auto" id="ck-bm" />
+          </label>
+        </div>
+      </div>
+
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <span>Running C++ engine…</span>
+      </div>
+
+      <button class="btn-run" id="btnRun">⚡ ANALYZE</button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-value" id="statMatches" style="color:var(--accent)">0</div>
+        <div class="stat-label">TOTAL MATCHES</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statSimilarity" style="color:var(--accent3)">0%</div>
+        <div class="stat-label">SIMILARITY SCORE</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statFastest" style="color:var(--accent2)">—</div>
+        <div class="stat-label">FASTEST ALGORITHM</div>
+      </div>
+    </div>
+
+    <!-- Similarity bar -->
+    <div class="similarity-bar-wrap">
+      <div class="sim-header">
+        <span>PLAGIARISM / REPETITION METER</span>
+        <span class="sim-pct" id="simPct">0%</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="barFill"></div>
+      </div>
+    </div>
+
+    <!-- Algorithm comparison table -->
+    <div class="algo-table-wrap">
+      <div class="panel-header">📊 ALGORITHM COMPARISON</div>
+      <table>
+        <thead>
+          <tr>
+            <th>ALGORITHM</th>
+            <th>MATCHES</th>
+            <th>TIME (µs)</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody id="algoTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Highlighted output -->
+    <div class="text-output-wrap">
+      <div class="panel-header">🖊 HIGHLIGHTED TEXT — matches in green</div>
+      <div id="highlighted-text"></div>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /shell -->
+
+<script>
+  // ─── Colour map per algorithm ──────────────
+  const ALGO_COLORS = {
+    'Rabin-Karp':  'var(--rk-color)',
+    'KMP':         'var(--kmp-color)',
+    'Boyer-Moore': 'var(--bm-color)',
+  };
+
+  // ─── Similarity → colour ───────────────────
+  function simColor(pct) {
+    if (pct < 20) return 'var(--accent)';
+    if (pct < 50) return 'var(--accent3)';
+    return 'var(--danger)';
+  }
+
+  // ─── Escape HTML special chars ─────────────
+  function escapeHTML(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ─── Build highlighted HTML ─────────────────
+  function buildHighlightedHTML(text, positions, plen) {
+    if (!positions || positions.length === 0)
+      return escapeHTML(text);
+
+    // Sort and merge overlapping intervals
+    const intervals = positions
+      .map(p => [p, p + plen])
+      .sort((a, b) => a[0] - b[0]);
+
+    const merged = [];
+    for (const iv of intervals) {
+      if (merged.length && iv[0] <= merged[merged.length - 1][1])
+        merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], iv[1]);
+      else
+        merged.push([...iv]);
+    }
+
+    let html = '';
+    let cursor = 0;
+    for (const [s, e] of merged) {
+      html += escapeHTML(text.slice(cursor, s));
+      html += `<mark>${escapeHTML(text.slice(s, e))}</mark>`;
+      cursor = e;
+    }
+    html += escapeHTML(text.slice(cursor));
+    return html;
+  }
+
+  // ─── Render all results to DOM ──────────────
+  function renderResults(data) {
+    const { text, pattern, similarity, matchPositions, matchCount, algorithms } = data;
+
+    // Stats cards
+    document.getElementById('statMatches').textContent = matchCount;
+    document.getElementById('statSimilarity').textContent = similarity.toFixed(1) + '%';
+
+    const fastest = algorithms.reduce((a, b) => a.timeUs < b.timeUs ? a : b);
+    document.getElementById('statFastest').textContent =
+      fastest.name.toUpperCase().split(' ')[0];
+
+    // Similarity bar
+    const sc = simColor(similarity);
+    document.getElementById('simPct').textContent = similarity.toFixed(1) + '%';
+    document.getElementById('simPct').style.color = sc;
+    setTimeout(() => {
+      document.getElementById('barFill').style.width      = similarity + '%';
+      document.getElementById('barFill').style.background = sc;
+    }, 50);
+
+    // Algorithm table
+    const maxTime = Math.max(...algorithms.map(a => a.timeUs), 1);
+    const tbody = document.getElementById('algoTableBody');
+    tbody.innerHTML = '';
+    algorithms.forEach(algo => {
+      const isWinner = algo.timeUs === fastest.timeUs;
+      const color    = ALGO_COLORS[algo.name] || 'var(--accent)';
+      const pct      = (algo.timeUs / maxTime * 100).toFixed(1);
+      tbody.innerHTML += `
+        <tr>
+          <td>
+            <div class="algo-name-cell">
+              <div class="algo-dot" style="background:${color}"></div>
+              ${algo.name}
+            </div>
+          </td>
+          <td>${algo.matchCount}</td>
+          <td>
+            <div class="time-bar-wrap">
+              <div class="time-bar-bg">
+                <div class="time-bar-inner"
+                     style="width:${pct}%;background:${color}"></div>
+              </div>
+              <span style="font-size:.8rem;min-width:50px">${algo.timeUs} µs</span>
+            </div>
+          </td>
+          <td>${isWinner
+            ? '<span class="winner-badge">⚡ FASTEST</span>'
+            : ''}</td>
+        </tr>`;
+    });
+
+    // Highlighted text
+    document.getElementById('highlighted-text').innerHTML =
+      buildHighlightedHTML(text, matchPositions, pattern.length);
+
+    document.getElementById('results').style.display = 'block';
+  }
+
+  // ─── Analyze button ─────────────────────────
+  document.getElementById('btnRun').addEventListener('click', async () => {
+    const text    = document.getElementById('inputText').value.trim();
+    const pattern = document.getElementById('patternInput').value.trim();
+    const errBox  = document.getElementById('errorBox');
+    const loader  = document.getElementById('loader');
+    const btn     = document.getElementById('btnRun');
+
+    errBox.style.display = 'none';
+    document.getElementById('results').style.display = 'none';
+
+    if (!text) {
+      errBox.textContent = 'Please enter some text.';
+      errBox.style.display = 'block';
+      return;
+    }
+    if (!pattern) {
+      errBox.textContent = 'Please enter a pattern to search.';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    loader.style.display = 'flex';
+
+    try {
+      const res = await fetch('/api/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, pattern }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      renderResults(data);
+    } catch (err) {
+      errBox.textContent = '❌ ' + err.message;
+      errBox.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      loader.style.display = 'none';
+    }
+  });
+
+  // Enter key shortcut on pattern field
+  document.getElementById('patternInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btnRun').click();
+  });
+</script>
+</body>
+</html>
